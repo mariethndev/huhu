@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-if (($_SESSION['role'] ?? '') !== 'organizer') {
-    header("Location: /huhu/huhu/views/homepage.php");
+if (($_SESSION['role'] ?? '') !== 'organisateur') {
+    header("Location: homepage.php");
     exit;
 }
 
@@ -18,7 +18,7 @@ require_once '../head.php';
 
     <div class="dash-grid">
 
-        <a href="/huhu/huhu/views/add_horses_form.php" class="dash-card">
+        <a href="/huhu/views/add_horses_form.php" class="dash-card">
             <div class="dash-card-icon">
                 <i class="bi bi-plus-circle"></i>
             </div>
@@ -29,7 +29,7 @@ require_once '../head.php';
             <span class="dash-card-cta">Accéder</span>
         </a>
 
-        <a href="/huhu/huhu/views/horses_list.php" class="dash-card">
+        <a href="/huhu/views/horses_list.php" class="dash-card">
             <div class="dash-card-icon">
                 <i class="bi bi-pencil-square"></i>
             </div>
@@ -40,7 +40,7 @@ require_once '../head.php';
             <span class="dash-card-cta">Accéder</span>
         </a>
 
-        <a href="/huhu/huhu/views/create_organisateur.php" class="dash-card">
+        <a href="/huhu/views/create_organisateur.php" class="dash-card">
             <div class="dash-card-icon">
                 <i class="bi bi-person-plus"></i>
             </div>
@@ -51,7 +51,7 @@ require_once '../head.php';
             <span class="dash-card-cta">Accéder</span>
         </a>
 
-        <a href="/huhu/huhu/views/organisateur_auctions.php" class="dash-card">
+        <a href="/huhu/views/organisateur_auctions.php" class="dash-card">
             <div class="dash-card-icon">
                 <i class="bi bi-hammer"></i>
             </div>

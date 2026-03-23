@@ -45,7 +45,7 @@ try {
     $stmtBid->execute([$auction['horse_id_fk']]);
     $bestBid = $stmtBid->fetch(PDO::FETCH_ASSOC);
 
-     $winnerId  = $bestBid['user_id_fk'] ?? null;
+    $winnerId  = $bestBid['user_id_fk'] ?? null;
     $finalPrice = $bestBid['bid_amount'] ?? $auction['auction_starting_price'];
 
      $stmtUpdate = $pdo->prepare("
@@ -65,6 +65,7 @@ try {
     exit;
 
 } catch (PDOException $e) {
+    echo $e->getMessage();
     header("Location: ../views/organisateur_auctions.php");
     exit;
 }

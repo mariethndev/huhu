@@ -18,18 +18,21 @@ if (
     empty($password) ||
     empty($confirm)
 ) {
-    exit("Champs manquants");
+    header("Location: ../views/create_organisateur.php");
+    exit;
 }
 
 if ($password !== $confirm) {
-    exit("Les mots de passe ne correspondent pas");
+    header("Location: ../views/create_organisateur.php");
+    exit;
 }
 
 try {
 
     $stmt = $pdo->prepare("
-        INSERT INTO users (name, email, password, role)
-        VALUES (?, ?, ?, 'organizer')
+        INSERT INTO users
+        (user_name, user_email, user_password, user_role)
+        VALUES (?, ?, ?, 'organisateur')
     ");
 
     $stmt->execute([
@@ -38,10 +41,11 @@ try {
         password_hash($password, PASSWORD_DEFAULT)
     ]);
 
-header("Location: ../views/homepage.php");
-exit;
+    header("Location: ../views/create_organisateur.php");
+    exit;
 
 } catch (PDOException $e) {
-
-    echo "Erreur SQL : " . $e->getMessage();
+    echo $e->getMessage();
+    header("Location: ../views/create_organisateur.php");
+    exit;
 }

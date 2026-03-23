@@ -1,78 +1,39 @@
-// Attend que tout le HTML soit chargé avant d'exécuter le script
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
 
-  // Récupère les éléments nécessaires dans le DOM
-  const bidButton = document.querySelector(".btn-bid"); // bouton pour enchérir
-  const modal = document.getElementById("bidModal"); // fenêtre modale d'enchère
-  const closeBtn = document.querySelector(".modal-close"); // bouton fermer la modale
-  const horseName = document.getElementById("modalHorseName"); // nom du cheval dans la modale
-  const currentPrice = document.getElementById("modalCurrentPrice"); // prix actuel affiché
-  const horseIdInput = document.getElementById("modalHorseId"); // champ caché pour l'id du cheval
-  const bidAmountInput = document.getElementById("bidAmount"); // champ du montant de l'enchère
-  const minusBtn = document.getElementById("bidMinus"); // bouton pour diminuer l'enchère
-  const plusBtn = document.getElementById("bidPlus"); // bouton pour augmenter l'enchère
-  const modalImg = document.querySelector(".modal-image img"); // image du cheval dans la modale
+  const btn = document.querySelector(".btn-bid");
+  const modal = document.getElementById("bidModal");
 
-  // Si le bouton d'enchère n'existe pas sur la page, on arrête le script
-  if (!bidButton) return;
+  if (btn && modal) {
 
-  // montant minimum d'augmentation d'une enchère
-  let priceStep = 50;
+    const step = 50;
+    let base = 0;
 
-  // prix actuel du cheval
-  let basePrice = 0;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation(); 
 
-  // Quand l'utilisateur clique sur le bouton "enchérir"
-  bidButton.addEventListener("click", function () {
+      base = Number(btn.dataset.price);
 
-    // récupère les données stockées dans les attributs data-*
-    const name = this.dataset.horseName; // nom du cheval
-    basePrice = parseFloat(this.dataset.price); // prix actuel converti en nombre
-    const id = this.dataset.horseId; // id du cheval
-    const image = this.dataset.image; // image du cheval
+      document.getElementById("modalHorseName").textContent = btn.dataset.horseName;
+      document.getElementById("modalCurrentPrice").textContent = base + " €";
+      document.getElementById("modalHorseId").value = btn.dataset.horseId;
+      document.getElementById("bidAmount").value = base + step;
 
-    // remplit les informations dans la modale
-    horseName.textContent = name;
-    // permet de renvoyer une chaîne de caractères 
-    // représentant un nombre en tenant compte de la locale
-    currentPrice.textContent = basePrice.toLocaleString() + " €"; // formatte le prix
-    
-    horseIdInput.value = id;
+      const img = document.querySelector(".modal-image img");
 
-    // montant proposé = prix actuel + incrément minimum
-    bidAmountInput.value = basePrice + priceStep;
+      if (img && btn.dataset.image) {
+        img.src = btn.dataset.image;
+        img.alt = btn.dataset.horseName;
+      }
 
-    // met à jour l'image dans la modale si elle existe
-    if (modalImg && image) {
-      modalImg.src = image;
-      modalImg.alt = name;
-    }
+      modal.classList.remove("hidden");
+    });
+  }
 
-    // affiche la modale (on retire la classe hidden)
-    modal.classList.remove("hidden");
-  });
-
-  // ferme la modale si on clique sur le bouton fermer
-  closeBtn.addEventListener("click", function () {
-    modal.classList.add("hidden");
-  });
-
-  // bouton pour diminuer l'enchère
-  minusBtn.addEventListener("click", function () {
-
-    // empêche de descendre en dessous de l'enchère minimale
-    // parseFloat() est une fonction JavaScript qui transforme une chaîne 
-    // de caractères (texte) en nombre décimal.
-    if (parseFloat(bidAmountInput.value) > basePrice + priceStep) {
-      bidAmountInput.value = parseFloat(bidAmountInput.value) - priceStep;
-    }
-  });
-
-  // bouton pour augmenter l'enchère
-  plusBtn.addEventListener("click", function () {
-
-    // ajoute l'incrément au montant actuel
-    bidAmountInput.value = parseFloat(bidAmountInput.value) + priceStep;
-  });
+  const closeBtn = document.querySelector(".modal-close");
+  if (closeBtn && modal) {
+    closeBtn.addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+  }
 
 });

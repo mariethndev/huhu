@@ -52,6 +52,7 @@ try {
     exit;
 
 } catch (PDOException $e) {
+    echo $e->getMessage();
     header("Location: ../views/profile.php?status=danger");
     exit;
 }

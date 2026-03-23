@@ -2,76 +2,49 @@
 require_once "../model/config.php";
 
 $horses = [];
-$statusFilter = $_GET['auction_status'] ?? '';
 
 try {
 
-    // mettre fin aux enchères expirées
-    $pdo->query("
-        UPDATE auctions
-        SET auction_status = 'terminé'
-        WHERE auction_status = 'disponible'
-        AND auction_end_date <= NOW()
-    ");
-
-    // récupérer tous les chevaux
-    $stmt = $pdo->query("
+    $stmt = $pdo->prepare("
         SELECT *
-        FROM horses
-        WHERE horse_is_deleted = 0
-        ORDER BY horse_register_date DESC
+        FROM auctions
+        WHERE auction_status = ?
+        ORDER BY auction_start_date DESC
     ");
+    $stmt->execute(['disponible']);
+    $auctions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $allHorses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($auctions as $auction) {
 
-    foreach ($allHorses as $horse) {
-
-        // récupérer l'enchère
-        $stmtAuction = $pdo->prepare("
+        $stmtHorse = $pdo->prepare("
             SELECT *
-            FROM auctions
-            WHERE horse_id_fk = ?
+            FROM horses
+            WHERE id_horse = ?
+            AND horse_is_deleted = 0
         ");
-        $stmtAuction->execute([$horse['id_horse']]);
-        $auction = $stmtAuction->fetch(PDO::FETCH_ASSOC);
+        $stmtHorse->execute([$auction['horse_id_fk']]);
+        $horse = $stmtHorse->fetch(PDO::FETCH_ASSOC);
 
-        if (!$auction) continue;
+        if (!$horse) continue;
 
-        // filtre statut
-        if ($statusFilter && $auction['auction_status'] != $statusFilter) {
-            continue;
+        $currentPrice = $auction['auction_final_price'];
+
+        if ($currentPrice === null) {
+            $currentPrice = $auction['auction_starting_price'];
         }
 
-        $horse['auction_status'] = $auction['auction_status'];
-        $horse['winner_name'] = '—';
+        $horse['current_price'] = (float)$currentPrice;
 
-        // si enchère terminée → trouver gagnant
-        if ($auction['auction_status'] === 'terminé') {
-
-            $stmtBest = $pdo->prepare("
-                SELECT user_id_fk
-                FROM bids
-                WHERE horse_id_fk = ?
-                ORDER BY bid_amount DESC
-                LIMIT 1
-            ");
-            $stmtBest->execute([$horse['id_horse']]);
-            $winnerId = $stmtBest->fetchColumn();
-
-            if ($winnerId) {
-                $stmtUser = $pdo->prepare("
-                    SELECT user_name
-                    FROM users
-                    WHERE id_user = ?
-                ");
-                $stmtUser->execute([$winnerId]);
-                $horse['winner_name'] = $stmtUser->fetchColumn() ?: '—';
-            }
-        }
+        $horse['auction_start_date'] = $auction['auction_start_date'];
+        $horse['auction_end_date']   = $auction['auction_end_date'];
+        $horse['id_auction']         = $auction['id_auction'];
 
         $horses[] = $horse;
     }
 
 } catch (PDOException $e) {
+    echo $e->getMessage();
     $horses = [];
 }
+
+$count = count($horses);

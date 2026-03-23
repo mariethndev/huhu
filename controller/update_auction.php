@@ -40,6 +40,7 @@ try {
     }
 
 } catch (PDOException $e) {
+    echo $e->getMessage();
 
     header("Location: ../views/organisateur_auctions.php");
     exit;

@@ -3,10 +3,10 @@ require_once '../controller/profile_ctrl.php';
 require_once '../head.php';
 
 $roleLabels = [
-    'visitor'   => 'Visitor',
-    'buyer'     => 'Buyer',
-    'seller'    => 'Seller',
-    'organizer' => 'Organizer',
+    'visiteur'     => 'Visiteur',
+    'acheteur'     => 'Acheteur',
+    'vendeur'      => 'Vendeur',
+    'organisateur' => 'Organisateur',
 ];
 
 $name  = htmlentities($user['user_name'], ENT_QUOTES, 'UTF-8');
@@ -61,7 +61,7 @@ $initials = strtoupper(substr($user['user_name'], 0, 1));
         </div>
 
         <div class="pr-card-footer">
-            <a href="/huhu/huhu/views/update_profile.php" class="pr-btn-edit">
+            <a href="/huhu/views/update_profile.php" class="pr-btn-edit">
                 <i class="bi bi-pencil"></i>
                 Modifier mes informations
             </a>

@@ -3,7 +3,7 @@ session_start();
 
 if (
     !isset($_SESSION['user_id']) ||
-    ($_SESSION['role'] ?? '') !== 'organizer'
+    ($_SESSION['role'] ?? '') !== 'organisateur'
 ) {
     header("Location: homepage.php");
     exit;
@@ -41,14 +41,14 @@ require_once '../head.php';
 
             <div class="af-grid-2">
 
-                <div class="af-field af-field--full">
+                 <div class="af-field af-field--full">
 
                     <label class="af-label">Photo du cheval</label>
 
                     <div style="margin-bottom:10px">
                         <img
                             id="horsePreview"
-                            src="/huhu/huhu/uploads/horses/horse_default.png"
+                            src="/huhu/uploads/horses/horse_default.png"
                             style="max-width:250px;border-radius:8px;"
                         >
                     </div>
@@ -62,7 +62,7 @@ require_once '../head.php';
 
                 </div>
 
-                <div class="af-field">
+                 <div class="af-field">
                     <label>Nom *</label>
                     <input type="text" name="horse_name" required>
                 </div>
@@ -78,7 +78,7 @@ require_once '../head.php';
 
                 <div class="af-field">
                     <label>Date de naissance *</label>
-                    <input type="date" name="horse_birthdate" required>
+                <input type="date" name="horse_birthdate" required max="<?= date('Y-m-d') ?>">         
                 </div>
 
                 <div class="af-field">
@@ -137,7 +137,7 @@ require_once '../head.php';
                     <input type="text" name="horse_nb_ueln">
                 </div>
 
-                <div class="af-field">
+                 <div class="af-field">
                     <label>Statut</label>
                     <select name="horse_status">
                         <option value="disponible">Disponible</option>
@@ -147,7 +147,7 @@ require_once '../head.php';
 
                 <div class="af-field">
                     <label>Prix de départ (€)</label>
-                    <input type="number" name="auction_starting_price" min="0">
+                    <input type="number" name="auction_starting_price" min="0" step="1">
                 </div>
 
                 <div class="af-field af-field--full">
@@ -166,5 +166,5 @@ require_once '../head.php';
     </div>
 
 </div>
- 
+
 <?php require_once '../footer.php'; ?>

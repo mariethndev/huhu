@@ -1,89 +1,82 @@
 <?php
 require_once "../model/config.php";
 
-$auctions   = [];
-$enCours    = [];
-$terminees  = [];
-$annulees   = [];
+$auctions = [];
 
 try {
 
-    $stmt = $pdo->query("
-        SELECT *
-        FROM auctions
-        ORDER BY start_date DESC
+     $stmtUpdate = $pdo->prepare("
+        UPDATE auctions
+        SET auction_status = ?
+        WHERE auction_status = ?
+        AND auction_end_date <= NOW()
     ");
+    $stmtUpdate->execute(['terminé', 'disponible']);
 
-    $auctions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+     $stmt = $pdo->prepare("
+        SELECT 
+            auctions.*,
+            horses.horse_name
+        FROM auctions
+        LEFT JOIN horses ON horses.id_horse = auctions.horse_id_fk
+        WHERE auctions.auction_status = ?
+        ORDER BY auction_start_date DESC
+    ");
+    $stmt->execute(['disponible']);
 
-    foreach ($auctions as &$auction) {
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        if (empty($auction['horse_id'])) {
-            continue;
-        }
+    $seen = [];
 
-        $horseId = $auction['horse_id'];
+    foreach ($results as $auction) {
 
-         $stmtHorse = $pdo->prepare("
-            SELECT name
-            FROM horses
-            WHERE id = ?
-        ");
-        $stmtHorse->execute([$horseId]);
-        $horse = $stmtHorse->fetch(PDO::FETCH_ASSOC);
+        $horseId = $auction['horse_id_fk'];
 
-        $auction['horse_name'] = $horse['name'] ?? '—';
+        if (!$horseId) continue;
+
+        if (isset($seen[$horseId])) continue;
+
+        $seen[$horseId] = true;
 
          $stmtBid = $pdo->prepare("
-            SELECT amount, user_id
+            SELECT bid_amount, user_id_fk
             FROM bids
-            WHERE auction_id = ?
-            ORDER BY amount DESC
+            WHERE horse_id_fk = ?
+            ORDER BY bid_amount DESC
             LIMIT 1
         ");
-        $stmtBid->execute([$auction['id']]);
+        $stmtBid->execute([$horseId]);
         $lastBid = $stmtBid->fetch(PDO::FETCH_ASSOC);
 
         if ($lastBid) {
-            $auction['last_bid']    = $lastBid['amount'];
-            $auction['last_bidder'] = $lastBid['user_id'];
+            $auction['last_bid'] = $lastBid['bid_amount'];
+            $winnerId = $lastBid['user_id_fk'];
         } else {
-            $auction['last_bid']    = $auction['starting_price'];
-            $auction['last_bidder'] = null;
+            $auction['last_bid'] = $auction['auction_starting_price'];
+            $winnerId = null;
         }
 
-         if (!empty($auction['end_date']) &&
-            strtotime($auction['end_date']) < time()) {
+         if ($winnerId) {
 
-            $auction['status'] = 'ended';
+            $stmtUser = $pdo->prepare("
+                SELECT user_name
+                FROM users
+                WHERE id_user = ?
+            ");
+            $stmtUser->execute([$winnerId]);
 
-        } elseif ($auction['status'] === 'cancelled') {
-
-            $auction['status'] = 'cancelled';
-
-        } else {
-
-            $auction['status'] = 'active';
-        }
-    }
-
-     foreach ($auctions as $auction) {
-
-        if ($auction['status'] === "active") {
-            $enCours[] = $auction;
-
-        } elseif ($auction['status'] === "ended") {
-            $terminees[] = $auction;
+            $auction['last_bidder_name'] = $stmtUser->fetchColumn() ?: '—';
 
         } else {
-            $annulees[] = $auction;
+
+            $auction['last_bidder_name'] = '—';
         }
+
+        $auctions[] = $auction;
     }
 
 } catch (PDOException $e) {
+    echo $e->getMessage();
 
-    $auctions   = [];
-    $enCours    = [];
-    $terminees  = [];
-    $annulees   = [];
+    $auctions = [];
 }
