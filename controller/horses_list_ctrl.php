@@ -16,28 +16,33 @@ try {
 
     foreach ($auctions as $auction) {
 
+        $auctionId = (int)$auction['id_auction'];
+        $horseId   = (int)$auction['horse_id_fk'];
+
         $stmtHorse = $pdo->prepare("
             SELECT *
             FROM horses
             WHERE id_horse = ?
             AND horse_is_deleted = 0
         ");
-        $stmtHorse->execute([$auction['horse_id_fk']]);
+        $stmtHorse->execute([$horseId]);
         $horse = $stmtHorse->fetch(PDO::FETCH_ASSOC);
 
         if (!$horse) continue;
 
-        $currentPrice = $auction['auction_final_price'];
+        $currentPrice = isset($auction['auction_final_price'])
+            ? (float)$auction['auction_final_price']
+            : (float)$auction['auction_starting_price'];
 
-        if ($currentPrice === null) {
-            $currentPrice = $auction['auction_starting_price'];
+        if ($currentPrice <= 0) {
+            $currentPrice = (float)$auction['auction_starting_price'];
         }
 
-        $horse['current_price'] = (float)$currentPrice;
+        $horse['current_price'] = $currentPrice;
 
         $horse['auction_start_date'] = $auction['auction_start_date'];
         $horse['auction_end_date']   = $auction['auction_end_date'];
-        $horse['id_auction']         = $auction['id_auction'];
+        $horse['id_auction']         = $auctionId;
 
         $horses[] = $horse;
     }

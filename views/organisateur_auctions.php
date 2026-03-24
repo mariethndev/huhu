@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+// 🔐 CSRF (vue uniquement)
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if (($_SESSION['role'] ?? '') !== 'organisateur') {
     header("Location: homepage.php");
     exit;
@@ -121,7 +126,7 @@ function escapeHtml($value) {
 
 </div>
 
- <div id="deleteModal" class="custom-modal hidden">
+<div id="deleteModal" class="custom-modal hidden">
 
     <div class="modal-card">
 
@@ -133,6 +138,9 @@ function escapeHtml($value) {
             </p>
 
             <form action="/huhu/controller/delete_auction.php" method="POST">
+
+                <!-- 🔐 CSRF -->
+                <input type="hidden" name="csrf_token" value="<?= escapeHtml($_SESSION['csrf_token']) ?>">
 
                 <input type="hidden" name="auction_id" id="deleteAuctionId">
 

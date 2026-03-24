@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+// 🔐 CSRF (vue uniquement)
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if (($_SESSION['role'] ?? '') !== 'organisateur') {
     header("Location: homepage.php");
     exit;
@@ -31,11 +36,15 @@ require_once '../head.php';
             </div>
         <?php endif; ?>
 
+        <!-- 🔧 FORM UPDATE -->
         <form method="POST" action="../controller/update_auction.php">
+
+            <!-- 🔐 CSRF -->
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
             <input type="hidden" name="auction_id" value="<?= (int)$auction['id_auction'] ?>">
 
-             <div class="af-field">
+            <div class="af-field">
 
                 <label class="af-label">Date de fin</label>
 
@@ -43,13 +52,13 @@ require_once '../head.php';
                     type="date"
                     name="auction_end_date"
                     class="af-input"
-                    value="<?= htmlentities($dateValue) ?>"
+                    value="<?= htmlentities($dateValue, ENT_QUOTES, 'UTF-8') ?>"
                     required
                 >
 
             </div>
 
-             <div class="af-field">
+            <div class="af-field">
 
                 <label class="af-label">Statut</label>
 
@@ -84,7 +93,11 @@ require_once '../head.php';
 
         <div class="af-divider"></div>
 
-         <form method="POST" action="../controller/close_auction.php">
+        <!-- 🔧 FORM CLOSE -->
+        <form method="POST" action="../controller/close_auction.php">
+
+            <!-- 🔐 CSRF -->
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
             <input type="hidden" name="auction_id" value="<?= (int)$auction['id_auction'] ?>">
 

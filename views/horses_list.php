@@ -7,12 +7,13 @@ require_once '../model/config.php';
 require_once '../controller/horses_list_ctrl.php';
 require_once '../head.php';
 
-function escapeHtml($value) {
-    return htmlentities($value ?? '', ENT_QUOTES, 'UTF-8');
-}
-
+// 🔐 CSRF (vue uniquement)
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+function escapeHtml($value) {
+    return htmlentities($value ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 $auction_status = $_GET['auction_status'] ?? '';
@@ -190,6 +191,7 @@ $auction_status = $_GET['auction_status'] ?? '';
 
                 <input type="hidden" name="horse_id" id="deleteHorseId">
 
+                <!-- 🔐 CSRF -->
                 <input type="hidden"
                        name="csrf_token"
                        value="<?= escapeHtml($_SESSION['csrf_token']) ?>">

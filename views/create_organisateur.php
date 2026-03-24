@@ -1,7 +1,9 @@
 <?php
 session_start();
 
- $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 require_once '../head.php';
 ?>
@@ -19,7 +21,7 @@ require_once '../head.php';
             </p>
         </div>
 
-         <?php if (isset($_GET['error'])): ?>
+        <?php if (isset($_GET['error'])): ?>
 
             <div class="co-alert">
 
@@ -45,33 +47,34 @@ require_once '../head.php';
 
         <?php endif; ?>
 
-         <form method="post" action="../controller/create_organisateur_ctrl.php">
+        <form method="post" action="../controller/create_organisateur_ctrl.php">
 
+            <!-- 🔐 CSRF -->
             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
 
-             <div class="co-field">
+            <div class="co-field">
                 <label class="co-label">Nom complet</label>
 
                 <input type="text"
                        name="name"
                        class="co-input"
                        placeholder="Prénom Nom"
-                       value="<?= isset($_GET['name']) ? htmlentities($_GET['name']) : '' ?>"
+                       value="<?= isset($_GET['name']) ? htmlentities($_GET['name'], ENT_QUOTES, 'UTF-8') : '' ?>"
                        required>
             </div>
 
-             <div class="co-field">
+            <div class="co-field">
                 <label class="co-label">Email</label>
 
                 <input type="email"
                        name="email"
                        class="co-input"
                        placeholder="exemple@email.com"
-                       value="<?= isset($_GET['email']) ? htmlentities($_GET['email']) : '' ?>"
+                       value="<?= isset($_GET['email']) ? htmlentities($_GET['email'], ENT_QUOTES, 'UTF-8') : '' ?>"
                        required>
             </div>
 
-             <div class="co-field">
+            <div class="co-field">
                 <label class="co-label">Mot de passe</label>
 
                 <input type="password"
@@ -83,7 +86,7 @@ require_once '../head.php';
                 <p class="co-hint">Au moins 8 caractères</p>
             </div>
 
-             <div class="co-field">
+            <div class="co-field">
                 <label class="co-label">Confirmation du mot de passe</label>
 
                 <input type="password"
@@ -93,13 +96,13 @@ require_once '../head.php';
                        required>
             </div>
 
-             <button type="submit" class="co-btn-submit">
+            <button type="submit" class="co-btn-submit">
                 Créer l'organisateur
             </button>
 
         </form>
 
-         <a href="/huhu/views/organisateur_dashboard.php" class="co-back">
+        <a href="/huhu/views/organisateur_dashboard.php" class="co-back">
             Retour au tableau de bord
         </a>
 

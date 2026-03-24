@@ -36,7 +36,7 @@ if (session_status() === PHP_SESSION_NONE) {
     <a href="/huhu/views/homepage.php">Accueil</a>
     <a href="/huhu/views/buy_a_horse.php">Enchères</a>
 
-    <?php if (($_SESSION['role'] ?? '') === 'organizer'): ?>
+    <?php if (($_SESSION['role'] ?? '') === 'organisateur'): ?>
       <a href="/huhu/views/organisateur_dashboard.php">Gérer</a>
     <?php endif; ?>
   </nav>
@@ -90,7 +90,7 @@ if (session_status() === PHP_SESSION_NONE) {
   <a href="/huhu/views/homepage.php">Accueil</a>
   <a href="/huhu/views/buy_a_horse.php">Enchères</a>
 
-<?php if (($_SESSION['role'] ?? '') === 'organisateur'): ?>
+  <?php if (($_SESSION['role'] ?? '') === 'organisateur'): ?>
     <a href="/huhu/views/organisateur_dashboard.php">Gérer</a>
   <?php endif; ?>
 

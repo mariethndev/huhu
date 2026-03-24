@@ -17,11 +17,16 @@ if (
 }
 
 $name     = trim($_POST['nom'] ?? '');
-$email    = trim($_POST['mail'] ?? '');
+$email    = strtolower(trim($_POST['mail'] ?? '')); 
 $password = $_POST['psw'] ?? '';
 $profil   = $_POST['profil'] ?? '';
 
 if (!$name || !$email || !$password || !$profil) {
+    header("Location: ../views/register_form.php");
+    exit;
+}
+
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     header("Location: ../views/register_form.php");
     exit;
 }
@@ -32,7 +37,7 @@ if ($profil !== "acheteur" && $profil !== "vendeur") {
 }
 
 try {
- 
+
     $stmt = $pdo->prepare("
         SELECT id_user
         FROM users
@@ -60,16 +65,16 @@ try {
         $profil
     ]);
 
-    $_SESSION['user_id'] = $pdo->lastInsertId();
-    $_SESSION['role']    = $profil;
+    session_regenerate_id(true);
 
-    unset($_SESSION['csrf_token']);
+    $_SESSION['user_id'] = (int)$pdo->lastInsertId();
+    $_SESSION['role']    = $profil;
 
     header("Location: ../views/homepage.php");
     exit;
 
 } catch (PDOException $e) {
 
-    echo $e->getMessage();  
+    echo $e->getMessage();
     exit;
 }

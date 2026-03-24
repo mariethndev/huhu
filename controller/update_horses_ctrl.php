@@ -15,28 +15,39 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (
+    empty($_POST['csrf_token']) ||
+    empty($_SESSION['csrf_token']) ||
+    !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+) {
+    header("Location: ../views/horses_list.php?status=danger");
+    exit;
+}
+
 $horseId = (int)($_POST['horse_id'] ?? 0);
 
 $name = trim($_POST['horse_name'] ?? '');
 
 $sex        = $_POST['horse_sex'] ?? '';
 $birthdate  = $_POST['horse_birthdate'] ?? '';
-$breed      = $_POST['horse_breed'] ?? '';
-$discipline = $_POST['horse_discipline'] ?? '';
+$breed      = trim($_POST['horse_breed'] ?? '');
+$discipline = trim($_POST['horse_discipline'] ?? '');
 $status     = $_POST['horse_status'] ?? '';
 
-$height = !empty($_POST['horse_height']) ? $_POST['horse_height'] : null;
-$weight = !empty($_POST['horse_weight']) ? $_POST['horse_weight'] : null;
+$height = !empty($_POST['horse_height']) ? (int)$_POST['horse_height'] : null;
+$weight = !empty($_POST['horse_weight']) ? (int)$_POST['horse_weight'] : null;
 
-$coat        = $_POST['horse_coat'] ?? '';
-$location    = $_POST['horse_location'] ?? '';
-$father      = $_POST['horse_father'] ?? '';
-$mother      = $_POST['horse_mother'] ?? '';
-$description = $_POST['horse_description'] ?? '';
-$idNumber    = $_POST['horse_id_number'] ?? '';
-$ueln        = $_POST['horse_nb_ueln'] ?? '';
+$coat        = trim($_POST['horse_coat'] ?? '');
+$location    = trim($_POST['horse_location'] ?? '');
+$father      = trim($_POST['horse_father'] ?? '');
+$mother      = trim($_POST['horse_mother'] ?? '');
+$description = trim($_POST['horse_description'] ?? '');
+$idNumber    = trim($_POST['horse_id_number'] ?? '');
+$ueln        = trim($_POST['horse_nb_ueln'] ?? '');
 
-$price = (float)($_POST['auction_starting_price'] ?? 0);
+$price = !empty($_POST['auction_starting_price'])
+    ? (float)$_POST['auction_starting_price']
+    : 0;
 
 if ($horseId <= 0 || $name === '') {
     header("Location: ../views/horses_list.php?status=danger");
@@ -79,7 +90,6 @@ try {
         SET auction_starting_price=?
         WHERE horse_id_fk=?
     ");
-
     $stmt->execute([$price, $horseId]);
 
     header("Location: ../views/update_horses_form.php?id=$horseId&status=success");

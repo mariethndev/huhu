@@ -5,7 +5,7 @@ $auctions = [];
 
 try {
 
-     $stmtUpdate = $pdo->prepare("
+    $stmtUpdate = $pdo->prepare("
         UPDATE auctions
         SET auction_status = ?
         WHERE auction_status = ?
@@ -13,7 +13,7 @@ try {
     ");
     $stmtUpdate->execute(['terminé', 'disponible']);
 
-     $stmt = $pdo->prepare("
+    $stmt = $pdo->prepare("
         SELECT 
             auctions.*,
             horses.horse_name
@@ -30,33 +30,33 @@ try {
 
     foreach ($results as $auction) {
 
-        $horseId = $auction['horse_id_fk'];
+        $auctionId = (int)$auction['id_auction'];
+        $horseId   = (int)$auction['horse_id_fk'];
 
-        if (!$horseId) continue;
-
+        if ($horseId <= 0) continue;
         if (isset($seen[$horseId])) continue;
 
         $seen[$horseId] = true;
 
-         $stmtBid = $pdo->prepare("
+        $stmtBid = $pdo->prepare("
             SELECT bid_amount, user_id_fk
             FROM bids
-            WHERE horse_id_fk = ?
+            WHERE auction_id_fk = ?
             ORDER BY bid_amount DESC
             LIMIT 1
         ");
-        $stmtBid->execute([$horseId]);
+        $stmtBid->execute([$auctionId]);
         $lastBid = $stmtBid->fetch(PDO::FETCH_ASSOC);
 
         if ($lastBid) {
-            $auction['last_bid'] = $lastBid['bid_amount'];
-            $winnerId = $lastBid['user_id_fk'];
+            $auction['last_bid'] = (float)$lastBid['bid_amount'];
+            $winnerId = (int)$lastBid['user_id_fk'];
         } else {
-            $auction['last_bid'] = $auction['auction_starting_price'];
+            $auction['last_bid'] = (float)$auction['auction_starting_price'];
             $winnerId = null;
         }
 
-         if ($winnerId) {
+        if ($winnerId) {
 
             $stmtUser = $pdo->prepare("
                 SELECT user_name
@@ -68,7 +68,6 @@ try {
             $auction['last_bidder_name'] = $stmtUser->fetchColumn() ?: '—';
 
         } else {
-
             $auction['last_bidder_name'] = '—';
         }
 
@@ -77,6 +76,5 @@ try {
 
 } catch (PDOException $e) {
     echo $e->getMessage();
-
     $auctions = [];
 }

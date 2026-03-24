@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once "../model/config.php";
 
 if (empty($_SESSION['user_id'])) {
@@ -6,7 +10,7 @@ if (empty($_SESSION['user_id'])) {
     exit;
 }
 
-$userId = $_SESSION['user_id'];
+$userId = (int)$_SESSION['user_id'];
 
 $groupedAuctions = [
     "en_cours" => [],
@@ -41,7 +45,7 @@ try {
 
     foreach ($bids as $bid) {
 
-        $horseId = (int)$bid['horse_id_fk'];
+        $horseId   = (int)$bid['horse_id_fk'];
         $auctionId = (int)$bid['id_auction'];
 
         $stmtHorse = $pdo->prepare("
@@ -69,7 +73,10 @@ try {
         ");
         $stmtPrice->execute([$auctionId]);
         $lastBid = $stmtPrice->fetchColumn();
-        $currentPrice = $lastBid ?: $auction['auction_starting_price'];
+
+        $currentPrice = ($lastBid !== null)
+            ? (float)$lastBid
+            : (float)$auction['auction_starting_price'];
 
         $stmtMyBid = $pdo->prepare("
             SELECT MAX(bid_amount)
@@ -122,17 +129,17 @@ try {
         $winnerData = $stmtWinner->fetch(PDO::FETCH_ASSOC);
 
         $lastBidder = $winnerData['user_name'] ?? 'Aucun';
-        $winnerId   = $winnerData['id_user'] ?? null;
+        $winnerId   = isset($winnerData['id_user']) ? (int)$winnerData['id_user'] : null;
 
         $data = [
-            "id_horse" => $horseId,
-            "horse_name" => $horse['horse_name'],
-            "auction_end_date" => $auction['auction_end_date'],
-            "last_price" => $currentPrice,
-            "my_last_bid" => $myLastBid,
-            "participants" => $participants,
-            "is_outbid" => $isOutbid,
-            "last_bidder" => $lastBidder,
+            "id_horse"        => $horseId,
+            "horse_name"      => $horse['horse_name'],
+            "auction_end_date"=> $auction['auction_end_date'],
+            "last_price"      => $currentPrice,
+            "my_last_bid"     => $myLastBid,
+            "participants"    => $participants,
+            "is_outbid"       => $isOutbid,
+            "last_bidder"     => $lastBidder,
         ];
 
         $status = strtolower(trim($auction['auction_status']));
@@ -145,7 +152,7 @@ try {
 
         } elseif ($status === 'terminé' || $status === 'termine') {
 
-            if ($winnerId == $userId) {
+            if ($winnerId === $userId) {
                 $groupedAuctions["remportees"][] = $data;
             } else {
                 $groupedAuctions["terminees"][] = $data;
@@ -154,6 +161,7 @@ try {
     }
 
 } catch (PDOException $e) {
+
     echo $e->getMessage();
 
     $groupedAuctions = [

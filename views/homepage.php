@@ -5,7 +5,7 @@ require_once '../controller/homepage_ctrl.php';
 require_once '../head.php';
 
 $horses = $horses ?? [];
-$count = $count ?? count($horses);
+$count  = $count ?? count($horses);
 ?>
 
 <section class="collection-section">
@@ -33,7 +33,7 @@ $count = $count ?? count($horses);
 
                 <?php
                 if (!empty($horse['horse_image'])) {
-                    $image = htmlentities($horse['horse_image']);
+                    $image = htmlentities($horse['horse_image'], ENT_QUOTES, 'UTF-8');
                 } else {
                     $image = "horse_default.png";
                 }
@@ -41,15 +41,15 @@ $count = $count ?? count($horses);
                 $imagePath = "/huhu/uploads/horses/" . $image;
                 ?>
 
-                <a href="horse_info.php?id=<?= $horse['id_horse'] ?>" class="collection-card">
+                <a href="horse_info.php?id=<?= (int)$horse['id_horse'] ?>" class="collection-card">
 
                     <div class="collection-image">
 
-                        <img src="<?= $imagePath ?>" alt="<?= htmlentities($horse['horse_name']) ?>">
+                        <img src="<?= $imagePath ?>" alt="<?= htmlentities($horse['horse_name'], ENT_QUOTES, 'UTF-8') ?>">
 
                         <div class="collection-badge">
                             <span class="badge-link">
-                                <?= htmlentities($horse['horse_name']) ?> – Voir sa fiche
+                                <?= htmlentities($horse['horse_name'], ENT_QUOTES, 'UTF-8') ?> – Voir sa fiche
                             </span>
                         </div>
 

@@ -1,5 +1,9 @@
 <?php
-require_once "../model/config.php";
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . "/../model/config.php";
 
 $horses = [];
 
@@ -11,7 +15,7 @@ $ageFilter  = $_GET['filter_age'] ?? '';
 $price_min  = $_GET['price_min'] ?? '';
 $price_max  = $_GET['price_max'] ?? '';
 
-$userId = $_SESSION['user_id'] ?? null;
+$userId = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
 try {
 
@@ -25,13 +29,18 @@ try {
 
     foreach ($auctions as $auction) {
 
+        $auctionId = (int)$auction['id_auction'];
+        $horseId   = (int)$auction['horse_id_fk'];
+
+        if ($horseId <= 0) continue;
+
         $stmtHorse = $pdo->prepare("
             SELECT *
             FROM horses
             WHERE id_horse = ?
             AND horse_is_deleted = 0
         ");
-        $stmtHorse->execute([$auction['horse_id_fk']]);
+        $stmtHorse->execute([$horseId]);
         $horse = $stmtHorse->fetch(PDO::FETCH_ASSOC);
 
         if (!$horse) continue;
@@ -41,14 +50,12 @@ try {
             FROM bids
             WHERE auction_id_fk = ?
         ");
-        $stmtLastBid->execute([$auction['id_auction']]);
+        $stmtLastBid->execute([$auctionId]);
         $lastBid = $stmtLastBid->fetchColumn();
 
-        if ($lastBid !== null) {
-            $currentPrice = (float)$lastBid;
-        } else {
-            $currentPrice = (float)$auction['auction_starting_price'];
-        }
+        $currentPrice = ($lastBid !== null)
+            ? (float)$lastBid
+            : (float)$auction['auction_starting_price'];
 
         $horse['current_price'] = $currentPrice;
         $horse['auction_start_date'] = $auction['auction_start_date'];
@@ -61,10 +68,10 @@ try {
             ORDER BY bid_amount DESC
             LIMIT 1
         ");
-        $stmtLeader->execute([$auction['id_auction']]);
+        $stmtLeader->execute([$auctionId]);
         $leaderId = $stmtLeader->fetchColumn();
 
-        $horse['is_leader'] = ($leaderId && $leaderId == $userId);
+        $horse['is_leader'] = ($leaderId && (int)$leaderId === $userId);
 
         if ($search !== '' && stripos($horse['horse_name'], $search) === false) continue;
         if ($breed !== '' && stripos($horse['horse_breed'], $breed) === false) continue;
@@ -96,7 +103,7 @@ try {
     }
 
 } catch (PDOException $e) {
-    echo $e->getMessage();
+    error_log($e->getMessage());
     $horses = [];
 }
 

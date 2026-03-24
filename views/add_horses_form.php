@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+// 🔐 CSRF (vue uniquement)
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if (
     !isset($_SESSION['user_id']) ||
     ($_SESSION['role'] ?? '') !== 'organisateur'
@@ -39,9 +44,12 @@ require_once '../head.php';
               method="post"
               enctype="multipart/form-data">
 
+            <!-- 🔐 CSRF -->
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+
             <div class="af-grid-2">
 
-                 <div class="af-field af-field--full">
+                <div class="af-field af-field--full">
 
                     <label class="af-label">Photo du cheval</label>
 
@@ -62,7 +70,7 @@ require_once '../head.php';
 
                 </div>
 
-                 <div class="af-field">
+                <div class="af-field">
                     <label>Nom *</label>
                     <input type="text" name="horse_name" required>
                 </div>
@@ -78,7 +86,7 @@ require_once '../head.php';
 
                 <div class="af-field">
                     <label>Date de naissance *</label>
-                <input type="date" name="horse_birthdate" required max="<?= date('Y-m-d') ?>">         
+                    <input type="date" name="horse_birthdate" required max="<?= date('Y-m-d') ?>">
                 </div>
 
                 <div class="af-field">
@@ -137,7 +145,7 @@ require_once '../head.php';
                     <input type="text" name="horse_nb_ueln">
                 </div>
 
-                 <div class="af-field">
+                <div class="af-field">
                     <label>Statut</label>
                     <select name="horse_status">
                         <option value="disponible">Disponible</option>

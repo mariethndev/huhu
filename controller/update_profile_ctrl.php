@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "../model/config.php";
+require_once "/../model/config.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: ../views/login_form.php");
@@ -12,11 +12,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (
+    empty($_POST['csrf_token']) ||
+    empty($_SESSION['csrf_token']) ||
+    !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+) {
+    die("Requête invalide (CSRF)");
+}
+
 $userId    = (int) $_SESSION['user_id'];
 $userName  = trim($_POST['user_name'] ?? '');
-$userEmail = trim($_POST['user_email'] ?? '');
+$userEmail = strtolower(trim($_POST['user_email'] ?? ''));
 
-if (!$userName || !$userEmail) {
+if (!$userName || !$userEmail || !filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
     header("Location: ../views/update_profile.php");
     exit;
 }
@@ -43,12 +51,9 @@ try {
     ");
     $stmt->execute([$userName, $userEmail, $userId]);
 
-    header("Location: ../views/update_profile.php");
+    header("Location: ../views/update_profile.php?status=success");
     exit;
 
 } catch (PDOException $e) {
-    echo $e->getMessage();
-
-    header("Location: ../views/update_profile.php");
-    exit;
+    die($e->getMessage());
 }

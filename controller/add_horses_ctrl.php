@@ -15,6 +15,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (
+    empty($_POST['csrf_token']) ||
+    empty($_SESSION['csrf_token']) ||
+    $_POST['csrf_token'] !== $_SESSION['csrf_token']
+) {
+    header("Location: ../views/add_horses_form.php?status=danger");
+    exit;
+}
+
 $horse_name      = trim($_POST['horse_name'] ?? '');
 $horse_breed     = trim($_POST['horse_breed'] ?? '');
 $horse_sex       = $_POST['horse_sex'] ?? '';
@@ -58,11 +67,15 @@ if (
     $mime = finfo_file($finfo, $_FILES['horse_image']['tmp_name']);
 
     if (!in_array($mime, $allowedTypes)) {
-        exit("Format image interdit : " . $mime);
+        exit("Format image interdit");
     }
 
     if (!is_uploaded_file($_FILES['horse_image']['tmp_name'])) {
         exit("Upload invalide");
+    }
+
+    if ($_FILES['horse_image']['size'] > 5 * 1024 * 1024) {
+        exit("Fichier trop volumineux");
     }
 
     $extension = match ($mime) {
@@ -73,12 +86,12 @@ if (
         default => 'jpg'
     };
 
-    $imageName = uniqid("horse_") . "." . $extension;
+    $imageName = uniqid("horse_", true) . "." . $extension;
     $destination = $uploadDir . $imageName;
 
     move_uploaded_file($_FILES['horse_image']['tmp_name'], $destination);
 }
- 
+
 if (
     empty($horse_name) ||
     empty($horse_breed) ||

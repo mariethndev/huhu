@@ -14,7 +14,8 @@ $email = htmlentities($user['user_email'], ENT_QUOTES, 'UTF-8');
 
 $role = $roleLabels[$user['user_role']] ?? 'Inconnu';
 
-$initials = strtoupper(substr($user['user_name'], 0, 1));
+// ✅ correction UTF-8
+$initials = strtoupper(mb_substr($user['user_name'], 0, 1, 'UTF-8'));
 ?>
 
 <div class="pr-page">
@@ -54,7 +55,7 @@ $initials = strtoupper(substr($user['user_name'], 0, 1));
                 </div>
                 <div class="pr-info-content">
                     <div class="pr-info-label">Rôle</div>
-                    <div class="pr-info-value"><?= $role ?></div>
+                    <div class="pr-info-value"><?= htmlentities($role, ENT_QUOTES, 'UTF-8') ?></div>
                 </div>
             </div>
 

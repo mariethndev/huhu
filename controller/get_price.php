@@ -2,46 +2,62 @@
 session_start();
 require_once "../model/config.php";
 
+header('Content-Type: application/json');
+
 $data = json_decode(file_get_contents("php://input"), true);
 $horseId = (int)($data['horse_id'] ?? 0);
 
-if (!$horseId) {
+if ($horseId <= 0) {
     echo json_encode(["success" => false]);
     exit;
 }
 
 try {
+
+    $stmtAuction = $pdo->prepare("
+        SELECT id_auction, auction_starting_price
+        FROM auctions
+        WHERE horse_id_fk = ?
+        LIMIT 1
+    ");
+    $stmtAuction->execute([$horseId]);
+    $auction = $stmtAuction->fetch(PDO::FETCH_ASSOC);
+
+    if (!$auction) {
+        echo json_encode(["success" => false]);
+        exit;
+    }
+
+    $auctionId = (int)$auction['id_auction'];
+
     $stmt = $pdo->prepare("
         SELECT bid_amount, user_id_fk
         FROM bids
-        WHERE horse_id_fk = ?
+        WHERE auction_id_fk = ?
         ORDER BY bid_amount DESC
         LIMIT 1
     ");
-    $stmt->execute([$horseId]);
-    $bid = $stmt->fetch();
+    $stmt->execute([$auctionId]);
+    $bid = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($bid) {
         $price = (float)$bid['bid_amount'];
-        $last = (int)$bid['user_id_fk'];
+        $last  = (int)$bid['user_id_fk'];
     } else {
-        $price = (float)$pdo->query("
-            SELECT auction_starting_price 
-            FROM auctions 
-            WHERE horse_id_fk = $horseId
-        ")->fetchColumn();
-        $last = null;
+        $price = (float)$auction['auction_starting_price'];
+        $last  = null;
     }
 
-    $user = $_SESSION['user_id'] ?? null;
+    $user = isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 
     $hasBid = false;
     if ($user) {
         $stmt = $pdo->prepare("
-            SELECT COUNT(*) FROM bids 
-            WHERE horse_id_fk = ? AND user_id_fk = ?
+            SELECT COUNT(*) 
+            FROM bids 
+            WHERE auction_id_fk = ? AND user_id_fk = ?
         ");
-        $stmt->execute([$horseId, $user]);
+        $stmt->execute([$auctionId, $user]);
         $hasBid = $stmt->fetchColumn() > 0;
     }
 
@@ -54,6 +70,9 @@ try {
     ]);
 
 } catch (Exception $e) {
-    echo $e->getMessage();
-    echo json_encode(["success" => false]);
+
+    echo json_encode([
+        "success" => false,
+        "error" => $e->getMessage()
+    ]);
 }

@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "../model/config.php";
+require_once "/../model/config.php";
 
 if (($_SESSION['role'] ?? '') !== 'organisateur') {
     header("Location: ../views/profile.php?status=danger");
@@ -12,6 +12,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (
+    empty($_POST['csrf_token']) ||
+    empty($_SESSION['csrf_token']) ||
+    !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+) {
+    header("Location: ../views/profile.php?status=danger");
+    exit;
+}
+
 $targetUserId = (int)($_POST['user_id'] ?? 0);
 $newRole      = trim($_POST['role'] ?? '');
 
@@ -20,23 +29,20 @@ if ($targetUserId <= 0) {
     exit;
 }
 
-if (
-    $newRole !== "visiteur" &&
-    $newRole !== "acheteur" &&
-    $newRole !== "vendeur" &&
-    $newRole !== "organisateur"
-) {
+$allowedRoles = ["visiteur", "acheteur", "vendeur", "organisateur"];
+
+if (!in_array($newRole, $allowedRoles, true)) {
     header("Location: ../views/profile.php?status=danger");
     exit;
 }
 
-
-if ($targetUserId === $_SESSION['user_id']) {
+if ($targetUserId === (int)$_SESSION['user_id']) {
     header("Location: ../views/profile.php?status=danger&message=Impossible de modifier votre propre rôle");
     exit;
 }
 
 try {
+
     $stmt = $pdo->prepare("
         UPDATE users
         SET user_role = ?
@@ -52,6 +58,7 @@ try {
     exit;
 
 } catch (PDOException $e) {
+
     echo $e->getMessage();
     header("Location: ../views/profile.php?status=danger");
     exit;

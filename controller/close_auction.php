@@ -12,6 +12,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (
+    empty($_POST['csrf_token']) ||
+    empty($_SESSION['csrf_token']) ||
+    !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+) {
+    header("Location: ../views/organisateur_auctions.php");
+    exit;
+}
+
 $id = (int)($_POST['auction_id'] ?? 0);
 
 if ($id <= 0) {
@@ -37,18 +46,17 @@ try {
     $stmtBid = $pdo->prepare("
         SELECT user_id_fk, bid_amount
         FROM bids
-        WHERE horse_id_fk = ?
+        WHERE auction_id_fk = ?
         ORDER BY bid_amount DESC
         LIMIT 1
     ");
-
-    $stmtBid->execute([$auction['horse_id_fk']]);
+    $stmtBid->execute([$id]);
     $bestBid = $stmtBid->fetch(PDO::FETCH_ASSOC);
 
     $winnerId  = $bestBid['user_id_fk'] ?? null;
     $finalPrice = $bestBid['bid_amount'] ?? $auction['auction_starting_price'];
 
-     $stmtUpdate = $pdo->prepare("
+    $stmtUpdate = $pdo->prepare("
         UPDATE auctions
         SET auction_status = 'terminé',
             auction_winner_id = ?,

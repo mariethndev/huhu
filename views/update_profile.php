@@ -1,11 +1,22 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once '../controller/profile_ctrl.php';
 require_once '../head.php';
 
-$name     = htmlentities($user['user_name'],  ENT_QUOTES, 'UTF-8');
+// 🔐 CSRF
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$name     = htmlentities($user['user_name'], ENT_QUOTES, 'UTF-8');
 $email    = htmlentities($user['user_email'], ENT_QUOTES, 'UTF-8');
-$role     = htmlentities($user['user_role'],  ENT_QUOTES, 'UTF-8');
-$initials = strtoupper(string: mb_substr($user['user_name'], 0, 1, 'UTF-8'));
+$role     = htmlentities($user['user_role'], ENT_QUOTES, 'UTF-8');
+
+// ✅ UTF-8 safe
+$initials = strtoupper(mb_substr($user['user_name'], 0, 1, 'UTF-8'));
 ?>
 
 <div class="pr-page">
@@ -33,6 +44,7 @@ $initials = strtoupper(string: mb_substr($user['user_name'], 0, 1, 'UTF-8'));
 
         <form action="../controller/update_profile_ctrl.php" method="POST">
 
+            <!-- 🔐 CSRF -->
             <input type="hidden"
                    name="csrf_token"
                    value="<?= htmlentities($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">

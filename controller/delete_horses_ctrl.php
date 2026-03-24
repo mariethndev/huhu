@@ -12,6 +12,15 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (
+    empty($_POST['csrf_token']) ||
+    empty($_SESSION['csrf_token']) ||
+    !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+) {
+    header("Location: ../views/horses_list.php");
+    exit;
+}
+
 $horse_id = (int)($_POST['horse_id'] ?? 0);
 
 if ($horse_id <= 0) {
@@ -20,13 +29,13 @@ if ($horse_id <= 0) {
 }
 
 try {
- 
+
     $stmt = $pdo->prepare("
         DELETE FROM auctions
         WHERE horse_id_fk = ?
     ");
     $stmt->execute([$horse_id]);
- 
+
     $stmt = $pdo->prepare("
         UPDATE horses
         SET horse_is_deleted = 1

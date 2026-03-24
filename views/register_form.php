@@ -5,7 +5,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-$_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 
 <div class="signup-page">
@@ -17,14 +19,14 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         </p>
 
         <?php if (isset($_GET['message'])): ?>
-            <div class="alert alert-<?= htmlentities($_GET['status'] ?? 'danger'); ?>">
-                <?= htmlentities($_GET['message']); ?>
+            <div class="alert alert-<?= htmlentities($_GET['status'] ?? 'danger', ENT_QUOTES, 'UTF-8'); ?>">
+                <?= htmlentities($_GET['message'], ENT_QUOTES, 'UTF-8'); ?>
             </div>
         <?php endif; ?>
         
         <form action="../controller/register_ctrl.php" method="post">
 
-             <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
+            <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token']; ?>">
 
             <div class="form-group">
                 <label>Nom</label>

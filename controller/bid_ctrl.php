@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once "../model/config.php";
+require_once "/../model/config.php";
 
 if (empty($_SESSION['user_id'])) {
     header("Location: ../views/login_form.php");
@@ -10,6 +10,14 @@ if (empty($_SESSION['user_id'])) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: ../index.php");
     exit;
+}
+
+if (
+    empty($_POST['csrf_token']) ||
+    empty($_SESSION['csrf_token']) ||
+    !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])
+) {
+    die("Requête invalide (CSRF)");
 }
 
 $horseId = (int)($_POST['horse_id'] ?? 0);
@@ -126,6 +134,5 @@ try {
     exit;
 
 } catch (PDOException $e) {
-    echo $e->getMessage();
-    exit;
+    die($e->getMessage());
 }

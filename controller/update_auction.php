@@ -1,4 +1,8 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once "../model/config.php";
 
 if (
@@ -24,7 +28,6 @@ try {
         WHERE id_auction = ?
         LIMIT 1
     ");
-
     $stmt->execute([$id]);
     $auction = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -40,6 +43,7 @@ try {
     }
 
 } catch (PDOException $e) {
+
     echo $e->getMessage();
 
     header("Location: ../views/organisateur_auctions.php");
